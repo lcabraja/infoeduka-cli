@@ -1,3 +1,4 @@
+from copy import copy
 from distutils.dir_util import copy_tree
 from email.mime import base
 from re import sub
@@ -19,6 +20,13 @@ username = os.environ.get("USERNAME")
 password = os.environ.get("PASSWORD")
 savefile = os.environ.get("SAVEFILE")
 outdir = os.environ.get("OUTDIR")
+
+print(" _____       __      _____    _       _             _____  _     _____ ")
+print("|_   _|     / _|    |  ___|  | |     | |           /  __ \| |   |_   _|")
+print("  | | _ __ | |_ ___ | |__  __| |_   _| | ____ _    | /  \/| |     | |  ")
+print("  | || '_ \|  _/ _ \|  __|/ _` | | | | |/ / _` |   | |    | |     | |  ")
+print(" _| || | | | || (_) | |__| (_| | |_| |   < (_| |   | \__/\| |_____| |_ ")
+print(" \___/_| |_|_| \___/\____/\__,_|\__,_|_|\_\__,_|    \____/\_____/\___/ ")
 
 if savefile is None: savefile = ".infoeduka.json"
 if outdir is None: outdir = "files"
@@ -118,22 +126,26 @@ def parse_materials(materials_response):
     return materials_data
 
 def download(session_token, path, file):
-    print(file)
     baseurl = "https://student.racunarstvo.hr/digitalnareferada/"
-    url = os.path.join(baseurl, file)
-    print(url)
-    return False
+    url = os.path.join(baseurl, file["url"])
+    
+    filepath = os.path.join(path, file["filename"])
+    copy_index = 1;
+    while os.path.exists(filepath):
+        filepath = os.path.join(path, file["filename"] + f"_{copy_index}")
+        copy_index += 1
+    print(filepath)
     headers = {"Cookie": f"PHPSESSID={session_token}"}
     response = requests.request("GET", url, headers=headers)
-    response.encoding = 'utf-8'
-    response_data =  json.loads(response.text)
+    
+    with open(filepath, mode='wb') as response_file:
+        response_file.write(response.content)
+    
     return True
 
 def download_materials(session_token, materials_data, semester_filter):
     files = {}
     for _, subject in materials_data.items():
-        print(json.dumps(subject, ensure_ascii=False, indent=4))
-        return False
         basepath = os.path.join(os.getcwd(), os.path.join(outdir, subject["name"].replace("/", "-")))
         if ('|'.join([subject["academic_year"], subject["semester"]]) == semester_filter):
             for category, files in subject["materials"]["files"].items():
