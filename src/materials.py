@@ -1,11 +1,7 @@
-from copy import copy
-from distutils.dir_util import copy_tree
-from email.mime import base
-from re import sub
 import requests, json, os
-from dotenv import load_dotenv
 import asyncio
 from tqdm.asyncio import tqdm
+import session
 
 ##            _               
 ##           | |              
@@ -30,26 +26,7 @@ def get_last_data(path):
             print(f"Error loading last session from file: [{path.split('/')[-1]}]")
     return data
 
-
-load_dotenv()
-username = os.environ.get("USERNAME")
-password = os.environ.get("PASSWORD")
-savefile = os.environ.get("SAVEFILE")
-outdir = os.environ.get("OUTDIR")
-
-print(" _____       __      _____    _       _             _____  _     _____ ")
-print("|_   _|     / _|    |  ___|  | |     | |           /  __ \| |   |_   _|")
-print("  | | _ __ | |_ ___ | |__  __| |_   _| | ____ _    | /  \/| |     | |  ")
-print("  | || '_ \|  _/ _ \|  __|/ _` | | | | |/ / _` |   | |    | |     | |  ")
-print(" _| || | | | || (_) | |__| (_| | |_| |   < (_| |   | \__/\| |_____| |_ ")
-print(" \___/_| |_|_| \___/\____/\__,_|\__,_|_|\_\__,_|    \____/\_____/\___/ ")
-print()
-print()
-
-if savefile is None: savefile = ".infoeduka.json"
-if outdir is None: outdir = "files"
-
-last_data = get_last_data(savefile)
+last_data = get_last_data(session.savefile)
 
 ##    __                  _   _                 
 ##   / _|                | | (_)                
@@ -62,15 +39,6 @@ last_data = get_last_data(savefile)
 def save_data(path, data):
     fp = open(path, 'w')
     fp.write(json.dumps(data))
-
-def post_login(login_username, login_password):
-    url = "https://student.racunarstvo.hr/digitalnareferada/api/login"
-    payload = f"-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\n{login_username}\r\n-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"password\"\r\n\r\n{login_password}\r\n-----011000010111000001101001--\r\n"
-    headers = { "Content-Type": "multipart/form-data; boundary=---011000010111000001101001" }
-    response = requests.request("POST", url, data=payload, headers=headers)
-    response_data = json.loads(response.text)
-    session_token = response.cookies.get("PHPSESSID")
-    return response_data, session_token
 
 def get_materials(session_token):
     url = "https://student.racunarstvo.hr/digitalnareferada/api/student/predmeti"
