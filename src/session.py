@@ -1,8 +1,25 @@
+from datetime import datetime
 import requests, json, typer
-import credentials
+from credentials import get_credentials, has_credentials
 
-def login(username, password):
+def verify_credentials(username, password):
+    try: 
+        _, session_token = post_login(username, password)
+        return session_token
+    except:
+        return False
+
+def reauthenticate():
+    credentials = get_credentials()
+    has_cred = has_credentials()
+    return
+    datetime.fromtimestamp()
+    if credentials["token"]["loggedin"]:
+        return token
+
+def authenticate(username, password):
     _, session_token = post_login(username, password)
+    # TODO: Parse and handle login reponse data
     return session_token
 
 def post_login(username, password):
