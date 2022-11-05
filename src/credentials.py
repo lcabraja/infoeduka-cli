@@ -1,8 +1,8 @@
-from datetime import datetime
 import click
 import re
 import json
 import copy
+from datetime import datetime
 from os import makedirs, remove
 from os.path import isdir
 from pathlib import Path
@@ -40,19 +40,21 @@ def write_file(path: Path, object: Any):
         json.dump(object, file, indent=4)
 
 
+def get_blank_credentials():
+    return copy.deepcopy(EMPTY_CREDENTIALS)
+
+
 def get_credentials():
     config_path: Path = get_filename(FILE_CREDENTIALS)
     try:
         return read_file(config_path)
     except:
-        return None
+        return get_blank_credentials()
 
 
 def set_credentials(username: str = None, password: str = None, token: str = None):
     save_credentials = get_credentials()
     config_path: Path = get_filename(FILE_CREDENTIALS)
-    if not save_credentials:
-        save_credentials = copy.deepcopy(EMPTY_CREDENTIALS)
 
     if username: save_credentials["username"] = username
     if password: save_credentials["password"] = password
@@ -64,9 +66,6 @@ def set_credentials(username: str = None, password: str = None, token: str = Non
 def reset_credentials(username: str = False, password: str = False, token: str = False):
     save_credentials = get_credentials()
     config_path: Path = get_filename(FILE_CREDENTIALS)
-
-    if not save_credentials:
-        save_credentials = copy.deepcopy(EMPTY_CREDENTIALS)
 
     if username and password and token: return delete_credentials()
     if username: save_credentials["username"] = None
@@ -81,6 +80,11 @@ def delete_credentials():
     remove(config_path)
 
 
+def get_username():
+    save_credentials = get_credentials()
+    return False if not save_credentials else save_credentials["username"]
+
+
 def validate_string(string: str):
     return True if string and len(string) > 0 else False
 
@@ -91,21 +95,23 @@ def validate_token_format(token: str):
     except:
         return False
 
-def validate_token(token):
+
+def did_token_timeout(token):
     loggedin = datetime.fromisoformat(token["loggedin"])
-    print(loggedin)
-    return False
+    diff = (datetime.now() - loggedin).total_seconds()
+    return False if diff < 1800 else True
+
 
 def has_credentials():
     credentials = get_credentials()
-
     if not credentials: return False
-    if validate_token(credentials["token"]): return True
+    if not did_token_timeout(credentials["token"]): return True
     if credentials["username"] and credentials["password"]: return True
     return False
 
-def can_continue(token, username, password):
+
+def get_login_method(token, username, password):
     if validate_token_format(token): return "token", token
-    if validate_string(username) and validate_string(password): return "username+password", {username: username, password: password}
+    if validate_string(username) and validate_string(password): return "username_password", None
     if has_credentials(): return "stored_credentials", None
     return False, None

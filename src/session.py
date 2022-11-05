@@ -1,6 +1,6 @@
 from datetime import datetime
-import requests, json, typer
-from credentials import get_credentials, has_credentials
+import requests, json
+from credentials import did_token_timeout, get_credentials, has_credentials, set_credentials
 
 def verify_credentials(username, password):
     try: 
@@ -9,18 +9,17 @@ def verify_credentials(username, password):
     except:
         return False
 
-def reauthenticate():
-    credentials = get_credentials()
-    has_cred = has_credentials()
-    return
-    datetime.fromtimestamp()
-    if credentials["token"]["loggedin"]:
-        return token
+def reauthenticate(credentials = get_credentials()):
+    if not did_token_timeout(credentials["token"]): return credentials["token"]["phpsessid"]
+    return authenticate(credentials["username"], credentials["password"], True)
 
-def authenticate(username, password):
+
+def authenticate(username, password, storeToken = False):
     _, session_token = post_login(username, password)
+    if storeToken: set_credentials(token=session_token)
     # TODO: Parse and handle login reponse data
     return session_token
+
 
 def post_login(username, password):
     url = "https://student.racunarstvo.hr/digitalnareferada/api/login"
