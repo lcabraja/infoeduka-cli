@@ -1,11 +1,10 @@
 import click
-from datetime import datetime
 from credentials import get_login_method, get_credentials, set_credentials, reset_credentials, get_username
+from endpoints.materials import materials_main
 from session import verify_credentials, authenticate, reauthenticate
 from log import Loggeer
 
 logger = None
-
 
 @click.group(invoke_without_command=False)
 @click.option('-t', '--token', help="PHPSESSID token")
@@ -89,6 +88,10 @@ def whoami(ctx):
 def test(ctx):
     click.echo("Test command ran successfully!")
 
+@cli.command()
+@click.pass_context
+def materials(ctx):
+    materials_main(ctx.obj["token"])
 
 if __name__ == '__main__':
     cli(obj={})

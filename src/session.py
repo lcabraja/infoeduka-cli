@@ -29,3 +29,12 @@ def post_login(username, password):
     response_data = json.loads(response.text)
     session_token = response.cookies.get("PHPSESSID")
     return response_data, session_token
+
+def get_materials(session_token):
+    url = "https://student.racunarstvo.hr/digitalnareferada/api/student/predmeti"
+    querystring = {"dodatno":"materijali"}
+    headers = {"Cookie": f"PHPSESSID={session_token}", "Accept": "application/json;charset=utf-8"}
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    response.encoding = 'utf-8'
+    response_data =  json.loads(response.text)
+    return response_data

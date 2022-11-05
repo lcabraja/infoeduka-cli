@@ -1,53 +1,12 @@
 import requests, json, os
 import asyncio
-from tqdm.asyncio import tqdm
-import session
+from credentials import FILE_MATERIALS, get_filename, try_read_file, write_file
 
-##            _               
-##           | |              
-##   ___  ___| |_ _   _ _ __  
-##  / __|/ _ \ __| | | | '_ \ 
-##  \__ \  __/ |_| |_| | |_) |
-##  |___/\___|\__|\__,_| .__/ 
-##                     | |    
-##                     |_|    
+from session import get_materials
 
-def get_last_data(path):
-    data = {}
-    if not os.path.exists(path): 
-        open(path, 'x').close()
-    else:
-        fp = open(path, 'r')
-        data = "".join(fp.readlines())
-        try:
-            data = json.loads("data_string")
-        except:
-            data = {}
-            print(f"Error loading last session from file: [{path.split('/')[-1]}]")
-    return data
-
-last_data = get_last_data(session.savefile)
-
-##    __                  _   _                 
-##   / _|                | | (_)                
-##  | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ 
-##  |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
-##  | | | |_| | | | | (__| |_| | (_) | | | \__ \
-##  |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-##  
-
-def save_data(path, data):
-    fp = open(path, 'w')
-    fp.write(json.dumps(data))
-
-def get_materials(session_token):
-    url = "https://student.racunarstvo.hr/digitalnareferada/api/student/predmeti"
-    querystring = {"dodatno":"materijali"}
-    headers = {"Cookie": f"PHPSESSID={session_token}", "Accept": "application/json;charset=utf-8"}
-    response = requests.request("GET", url, headers=headers, params=querystring)
-    response.encoding = 'utf-8'
-    response_data =  json.loads(response.text)
-    return response_data
+# TODO put everything in the cache and copy from there
+outdir = os.getcwd()
+print (outdir)
 
 def parse_materials(materials_response):
     materials_data = {}
@@ -138,10 +97,7 @@ async def download(session_token, file, index):
     headers = {"Cookie": f"PHPSESSID={session_token}"}
 
     response = requests.get(url, headers=headers, stream=True)
-    with tqdm.wrapattr(open(os.devnull, "wb"), "write", 
-            miniters=1, desc=file["filename"],
-            total=int(response.headers.get('content-length', 0))
-    ) as fout:
+    with open(os.devnull, "wb") as fout:
         for chunk in response.iter_content(chunk_size=4096):
             fout.write(chunk)
 
@@ -156,32 +112,15 @@ async def download_materials(session_token, materials_data, semester_filter):
                 for id, file in files.items():
                     if not file["downloaded"]:
                         queued_files.append((file))
-    ret = await asyncio.gather(*[download(session_token, file, index) for index, file in enumerate(queued_files)])
-    print("DONE!")
+    await asyncio.gather(*[download(session_token, file, index) for index, file in enumerate(queued_files)])
 
-##                 _       _          _             _   
-##                (_)     | |        | |           | |  
-##   ___  ___ _ __ _ _ __ | |_    ___| |_ __ _ _ __| |_ 
-##  / __|/ __| '__| | '_ \| __|  / __| __/ _` | '__| __|
-##  \__ \ (__| |  | | |_) | |_   \__ \ || (_| | |  | |_ 
-##  |___/\___|_|  |_| .__/ \__|  |___/\__\__,_|_|   \__|
-##                  | |                                 
-##                  |_|                                 
-
-login_response_data, session_id = post_login(username, password)
-materials_response_data = parse_materials(get_materials(session_id))
-materials_diff(last_data, materials_response_data)
-semester_filter = "2022/2023|Zimski"
-asyncio.run(download_materials(session_id, materials_response_data, semester_filter))
-
-##        _                              
-##       | |                             
-##    ___| | ___  __ _ _ __  _   _ _ __  
-##   / __| |/ _ \/ _` | '_ \| | | | '_ \ 
-##  | (__| |  __/ (_| | | | | |_| | |_) |
-##   \___|_|\___|\__,_|_| |_|\__,_| .__/ 
-##                                | |    
-##                                |_|    
-
-print(json.dumps(materials_response_data, indent=4, ensure_ascii=False))
-save_data(savefile, materials_response_data)
+def materials_main(session_token):
+    materials_path = get_filename(FILE_MATERIALS)
+    last_data = try_read_file(materials_path) or {}
+    materials_response_data = parse_materials(get_materials(session_token))
+    materials_diff(last_data, materials_response_data)
+    # TODO implement a filtering system
+    # TODO implement a warning when downloading all files, only once
+    semester_filter = "2022/2023|Zimski"
+    asyncio.run(download_materials(session_token, materials_response_data, semester_filter))
+    write_file(materials_path, materials_response_data)

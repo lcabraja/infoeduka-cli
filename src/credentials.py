@@ -11,6 +11,7 @@ from typing import Any
 APP_NAME = "infoeduka-cli"
 FILE_CREDENTIALS = "credentials.json"
 FILE_MATERIALS = "materials.json"
+DIRECTORY_MATERIALS = "materials"
 
 EMPTY_CREDENTIALS = {
     "username": None,
@@ -33,6 +34,13 @@ def get_filename(filename: str):
 def read_file(path: Path):
     with path.open("r") as credential_file:
         return json.load(credential_file)
+
+
+def try_read_file(path: Path):
+    try:
+        return read_file(path)
+    except:
+        return None
 
 
 def write_file(path: Path, object: Any):
