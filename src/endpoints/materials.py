@@ -6,7 +6,6 @@ from session import get_materials
 
 # TODO put everything in the cache and copy from there
 outdir = os.getcwd()
-print (outdir)
 
 def parse_materials(materials_response):
     materials_data = {}
