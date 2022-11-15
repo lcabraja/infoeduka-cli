@@ -1,5 +1,5 @@
-import requests, json, os
-import asyncio
+import click
+import requests, asyncio, os
 from credentials import FILE_MATERIALS, get_filename, try_read_file, write_file
 
 from session import get_materials
@@ -83,22 +83,29 @@ def category_path_from_file(file):
     category_path = os.path.join(basepath, file["mat_category"].replace("/", "-"))
     return category_path
 
-async def download(session_token, file, index):
-    baseurl = "https://student.racunarstvo.hr/digitalnareferada/"
-    url = os.path.join(baseurl, file["url"])
-    
-    path = category_path_from_file(file)
-    filepath = os.path.join(path, file["filename"])
-    copy_index = 1;
-    while os.path.exists(filepath):
-        filepath = os.path.join(path, file["filename"] + f"_{copy_index}")
-        copy_index += 1
-    headers = {"Cookie": f"PHPSESSID={session_token}"}
+async def download(session_token, file_instance, index):
+    try:
+        baseurl = "https://student.racunarstvo.hr/digitalnareferada/"
+        url = os.path.join(baseurl, file_instance["url"])
+        
+        path = category_path_from_file(file_instance)
+        filepath = os.path.join(path, file_instance["filename"])
+        copy_index = 1;
+        while os.path.exists(filepath):
+            filepath = os.path.join(path, file_instance["filename"] + f"_{copy_index}")
+            copy_index += 1
+        headers = {"Cookie": f"PHPSESSID={session_token}"}
 
-    response = requests.get(url, headers=headers, stream=True)
-    with open(os.devnull, "wb") as fout:
-        for chunk in response.iter_content(chunk_size=4096):
-            fout.write(chunk)
+        response = requests.get(url, headers=headers, stream=True)
+        with open(filepath, "wb") as fout:
+            for chunk in response.iter_content(chunk_size=4096):
+                fout.write(chunk)
+            print(f"Completed download of {file_instance['filename']}")
+    except KeyboardInterrupt:
+        click.echo(f"Aborting download, [{file_instance['filename']}] may be incomplete and won't work properly")
+        click.Abort()
+        return
+        
 
 async def download_materials(session_token, materials_data, semester_filter):
     queued_files = []
@@ -121,5 +128,9 @@ def materials_main(session_token):
     # TODO implement a filtering system
     # TODO implement a warning when downloading all files, only once
     semester_filter = "2022/2023|Zimski"
-    asyncio.run(download_materials(session_token, materials_response_data, semester_filter))
+    try:
+        asyncio.run(download_materials(session_token, materials_response_data, semester_filter))
+    except KeyboardInterrupt:
+        click.echo("Aborting download, some files may be incomplete and won't work properly")
+        click.Abort()
     write_file(materials_path, materials_response_data)
