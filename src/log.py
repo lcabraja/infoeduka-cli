@@ -2,7 +2,7 @@ import click
 from typing import Any
 
 
-class Loggeer:
+class Logger:
     def __init__(self, verbose: bool):
         self.verbose = verbose
 

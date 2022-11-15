@@ -2,7 +2,7 @@ import click
 from credentials import get_login_method, get_credentials, set_credentials, reset_credentials, get_username
 from endpoints.materials import materials_main
 from session import verify_credentials, authenticate, reauthenticate
-from log import Loggeer
+from log import Logger
 
 logger = None
 
@@ -14,11 +14,8 @@ logger = None
 @click.option('--verbose', default=False, help="Logs additional data")
 @click.pass_context
 def cli(ctx, token, username, password, incognito, verbose):
-    logger = Loggeer(verbose)
+    logger = Logger(verbose)
     login_method, token = get_login_method(token, username, password)
-
-    if incognito:
-        print("aaaaa")
 
     # Check to see if the CLI has any valid credentials
     if login_method == False and ctx.invoked_subcommand not in ["login", "logout"]:
@@ -63,8 +60,7 @@ def login(ctx, username, password, verify):
 
 
 @cli.command()
-@click.pass_context
-def logout(ctx):
+def logout():
     credentials = get_credentials()
     if get_login_method(None, username=credentials["username"], password=credentials["password"]):
         reset_credentials(username=True, password=True, token=True)
