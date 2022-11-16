@@ -1,11 +1,19 @@
-import click
-import requests, asyncio, os
+import json
+import asyncio, os
+from requests import request
 from credentials import FILE_MATERIALS, get_filename, try_read_file, write_file
-
-from session import get_materials
 
 # TODO put everything in the cache and copy from there
 outdir = os.getcwd()
+
+def get_materials(session_token):
+    url = "https://student.racunarstvo.hr/digitalnareferada/api/student/predmeti"
+    querystring = {"dodatno":"materijali"}
+    headers = {"Cookie": f"PHPSESSID={session_token}", "Accept": "application/json;charset=utf-8"}
+    response = request("GET", url, headers=headers, params=querystring)
+    response.encoding = 'utf-8'
+    response_data =  json.loads(response.text)
+    return response_data
 
 def parse_materials(materials_response):
     materials_data = {}
@@ -120,7 +128,7 @@ def materials_main(session_token):
     last_data = try_read_file(materials_path) or {}
     materials_response_data = parse_materials(get_materials(session_token))
     materials_diff(last_data, materials_response_data)
-    # TODO implement a filtering system
+    # TODO implement a filtering systemx
     # TODO implement a warning when downloading all files, only once
     semester_filter = "2022/2023|Zimski"
     asyncio.run(download_materials(session_token, materials_response_data, semester_filter))
