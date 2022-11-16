@@ -1,6 +1,6 @@
 import json
 import asyncio, os
-from requests import request
+from requests import request, get as requests_get
 from credentials import FILE_MATERIALS, get_filename, try_read_file, write_file
 
 # TODO put everything in the cache and copy from there
@@ -103,7 +103,7 @@ async def download(session_token, file_instance, index):
         copy_index += 1
     headers = {"Cookie": f"PHPSESSID={session_token}"}
 
-    response = requests.get(url, headers=headers, stream=True)
+    response = requests_get(url, headers=headers, stream=True)
     with open(filepath, "wb") as fout:
         for chunk in response.iter_content(chunk_size=4096):
             fout.write(chunk)

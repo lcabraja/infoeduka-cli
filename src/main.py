@@ -1,8 +1,10 @@
 import click
-from credentials import get_login_method, get_credentials, set_credentials, reset_credentials, get_username
-from endpoints.materials import materials_main
 from session import verify_credentials, authenticate, reauthenticate
+
 from log import Logger
+from endpoints.schedule import schedule_main
+from endpoints.materials import materials_main
+from credentials import get_login_method, get_credentials, set_credentials, reset_credentials, get_username
 
 logger = None
 
@@ -88,6 +90,11 @@ def test(ctx):
 @click.pass_context
 def materials(ctx):
     materials_main(ctx.obj["token"])
+
+@cli.command()
+@click.pass_context
+def schedule(ctx):
+    schedule_main(ctx.obj["token"])
 
 if __name__ == '__main__':
     cli(obj={})
