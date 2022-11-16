@@ -4,6 +4,7 @@ from requests import request, get as requests_get
 from credentials import FILE_MATERIALS, get_filename, try_read_file, write_file
 
 # TODO put everything in the cache and copy from there
+# TODO implement repositories, which take note of their own data and can handle a set of classes
 outdir = os.getcwd()
 
 def get_materials(session_token):
