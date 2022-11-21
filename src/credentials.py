@@ -112,7 +112,7 @@ def did_token_timeout(token):
 
 def has_credentials():
     credentials = get_credentials()
-    if not credentials: return False
+    if credentials == get_blank_credentials(): return False
     if not did_token_timeout(credentials["token"]): return True
     if credentials["username"] and credentials["password"]: return True
     return False
