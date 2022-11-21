@@ -15,7 +15,7 @@ def parse_schedule(schedule_response_data):
 def get_todays_schedule(schedule_data):
     pass
 
-def materials_main(session_token):
+def schedule_main(session_token):
     schedule_respnose_data = parse_schedule(get_schedule(session_token))
     today = get_todays_schedule(schedule_respnose_data)
     return today
