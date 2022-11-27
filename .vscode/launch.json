@@ -4,12 +4,49 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+        {
+            "name": "Login",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.py",
+            "args": ["login", "username", "password"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Logout",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.py",
+            "args": ["logout"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
         {
             "name": "Materials",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/main.py",
-            "args": ["materials"],
+            "args": ["materials", "/var/folders/sk/kvxn8z157ps141t5jp957k4r0000gn/T/infoeduka"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Schedule",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.py",
+            "args": ["schedule"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.py",
+            "args": ["test"],
             "console": "integratedTerminal",
             "justMyCode": true
         }
