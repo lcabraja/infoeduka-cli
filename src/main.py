@@ -82,14 +82,14 @@ def whoami(ctx):
 
 
 @cli.command()
-@click.pass_context
-def test(ctx):
+def test():
     click.echo("Test command ran successfully!")
 
 @cli.command()
+@click.argument('directory', type=click.Path(exists=False, dir_okay=True, file_okay=False, resolve_path=True))
 @click.pass_context
-def materials(ctx):
-    materials_main(ctx.obj["token"])
+def materials(ctx, directory):
+    materials_main(ctx.obj["token"], directory)
 
 @cli.command()
 @click.pass_context

@@ -5,7 +5,12 @@ from credentials import FILE_MATERIALS, get_filename, try_read_file, write_file
 
 # TODO put everything in the cache and copy from there
 # TODO implement repositories, which take note of their own data and can handle a set of classes
-outdir = os.getcwd()
+
+def ensure_directory(directory):
+    try:
+        os.makedirs(directory)
+    except:
+        pass
 
 def get_materials(session_token):
     url = "https://student.racunarstvo.hr/digitalnareferada/api/student/predmeti"
@@ -87,8 +92,8 @@ def materials_diff(old_materials_data, new_materials_data):
                             old_materials_data[id_course]["materials"]["files"][category][id_file]["downloaded"] == True:
                             new_materials_data[id_course]["materials"]["files"][category][id_file]["downloaded"] = True
 
-def category_path_from_file(file):
-    basepath = os.path.join(os.getcwd(), os.path.join(outdir, file["subject_name"].replace("/", "-")))
+def category_path_from_file(file, directory):
+    basepath = os.path.join(os.getcwd(), os.path.join(directory, file["subject_name"].replace("/", "-")))
     category_path = os.path.join(basepath, file["mat_category"].replace("/", "-"))
     return category_path
 
@@ -111,10 +116,10 @@ async def download(session_token, file_instance, index):
         print(f"Completed download of {file_instance['filename']}")
         
 
-async def download_materials(session_token, materials_data, semester_filter):
+async def download_materials(session_token, directory, materials_data, semester_filter):
     queued_files = []
     for _, subject in materials_data.items():
-        basepath = os.path.join(os.getcwd(), os.path.join(outdir, subject["name"].replace("/", "-")))
+        basepath = os.path.join(os.getcwd(), os.path.join(directory, subject["name"].replace("/", "-")))
         if ('|'.join([subject["academic_year"], subject["semester"]]) == semester_filter):
             for category, files in subject["materials"]["files"].items():
                 category_path = os.path.join(basepath, category.replace("/", "-"))
@@ -124,7 +129,8 @@ async def download_materials(session_token, materials_data, semester_filter):
                         queued_files.append((file))
     await asyncio.gather(*[download(session_token, file, index) for index, file in enumerate(queued_files)])
 
-def materials_main(session_token):
+def materials_main(session_token, directory):
+    ensure_directory(directory)
     materials_path = get_filename(FILE_MATERIALS)
     last_data = try_read_file(materials_path) or {}
     materials_response_data = parse_materials(get_materials(session_token))
